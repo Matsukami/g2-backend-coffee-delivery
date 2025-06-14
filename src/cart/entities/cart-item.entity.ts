@@ -6,7 +6,7 @@ export class CartItem implements PrismaCartItem {
   cartId: string;
   coffeeId: string;
   quantity: number;
-  unitPrice: Decimal;
+  unit_price: Decimal;
   createdAt: Date;
   updatedAt: Date;
   

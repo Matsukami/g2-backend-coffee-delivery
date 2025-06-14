@@ -6,10 +6,8 @@ export class Coffee implements PrismaCoffee {
   name: string;
   description: string;
   price: Decimal;
-  imageUrl: string;
+  image_url: string;
   createdAt: Date;
   updatedAt: Date;
-  
-  // Campos adicionais não presentes no modelo Prisma
   tags?: { id: string; name: string }[];
 } 

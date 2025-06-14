@@ -4,10 +4,10 @@ export class CartItemResponseDto {
     id: string;
     name: string;
     price: number;
-    imageUrl: string;
+    image_url: string;
   };
   quantity: number;
-  unitPrice: number;
+  unit_price: number;
   subtotal: number;
 }
 

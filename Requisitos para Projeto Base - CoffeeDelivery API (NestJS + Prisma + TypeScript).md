@@ -141,7 +141,7 @@ model Cart {
 model CartItem {
   id         String   @id @default(uuid())
   quantity   Int
-  unitPrice  Decimal  @db.Decimal(10, 2)
+  unit_price  Decimal  @db.Decimal(10, 2)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   
@@ -775,7 +775,7 @@ export class AppModule {}
      cartId: string;
      coffeeId: string;
      quantity: number;
-     unitPrice: number | string;
+     unit_price: number | string;
      createdAt: Date;
      updatedAt: Date;
      
@@ -835,7 +835,7 @@ export class AppModule {}
        imageUrl: string;
      };
      quantity: number;
-     unitPrice: number;
+     unit_price: number;
      subtotal: number;
    }
 
@@ -910,7 +910,7 @@ export class AppModule {}
        // Calcular subtotal para cada item
        const items = cart.items.map(item => ({
          ...item,
-         subtotal: Number(item.quantity) * Number(item.unitPrice),
+         subtotal: Number(item.quantity) * Number(item.unit_price),
          coffee: {
            ...item.coffee,
            tags: item.coffee.tags.map(coffeeTag => coffeeTag.tag),
@@ -992,7 +992,7 @@ export class AppModule {}
 
          return {
            ...updatedItem,
-           subtotal: Number(updatedItem.quantity) * Number(updatedItem.unitPrice),
+           subtotal: Number(updatedItem.quantity) * Number(updatedItem.unit_price),
          };
        }
 
@@ -1002,14 +1002,14 @@ export class AppModule {}
            cart: { connect: { id: cartId } },
            coffee: { connect: { id: coffeeId } },
            quantity,
-           unitPrice: coffee.price,
+           unit_price: coffee.price,
          },
          include: { coffee: true },
        });
 
        return {
          ...newItem,
-         subtotal: Number(newItem.quantity) * Number(newItem.unitPrice),
+         subtotal: Number(newItem.quantity) * Number(newItem.unit_price),
        };
      }
 
@@ -1035,7 +1035,7 @@ export class AppModule {}
 
        return {
          ...updatedItem,
-         subtotal: Number(updatedItem.quantity) * Number(updatedItem.unitPrice),
+         subtotal: Number(updatedItem.quantity) * Number(updatedItem.unit_price),
        };
      }
 
@@ -1179,7 +1179,7 @@ export class AppModule {}
    export class OrderItemDto {
      name: string;
      quantity: number;
-     unitPrice: number;
+     unit_price: number;
      subtotal: number;
    }
 
@@ -1239,7 +1239,7 @@ export class AppModule {}
          items: cart.items.map(item => ({
            name: item.coffee.name,
            quantity: item.quantity,
-           unitPrice: Number(item.unitPrice),
+           unit_price: Number(item.unit_price),
            subtotal: Number(item.subtotal),
          })),
          uniqueCategories: cart.uniqueCategories,

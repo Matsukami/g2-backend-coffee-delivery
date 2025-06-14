@@ -11,16 +11,13 @@ export class CoffeesService {
     const coffees = await this.prisma.coffee.findMany({
       include: {
         tags: {
-          include: {
-            tag: true,
-          },
+          include: { tag: true },
         },
       },
     });
-
     return coffees.map(coffee => ({
       ...coffee,
-      tags: coffee.tags.map(coffeeTag => coffeeTag.tag),
+      tags: coffee.tags.map(ct => ct.tag),
     }));
   }
 
@@ -29,50 +26,83 @@ export class CoffeesService {
       where: { id },
       include: {
         tags: {
-          include: {
-            tag: true,
-          },
+          include: { tag: true },
         },
       },
     });
-
-    if (!coffee) {
-      throw new NotFoundException(`Coffee with ID ${id} not found`);
-    }
-
+    if (!coffee) throw new NotFoundException(`Café com ID ${id} não encontrado!`);
     return {
       ...coffee,
-      tags: coffee.tags.map(coffeeTag => coffeeTag.tag),
+      tags: coffee.tags.map(ct => ct.tag),
     };
   }
 
-  async create(createCoffeeDto: CreateCoffeeDto) {
-    // código aqui
-
-    // return this.prisma.coffee.create({data: {}});
-  }
-
-  async update(id: string, updateCoffeeDto: UpdateCoffeeDto) {
-    // código de implementação aqui
-
-    // Atualizar os dados do café
-    return this.prisma.coffee.update({
-      where: { id },
-      data: [], // seu dados atualziados iserir aqui
-      include: {
+  async create(data: CreateCoffeeDto) {
+    const { tags, ...coffeeData } = data;
+    const coffee = await this.prisma.coffee.create({
+      data: {
+        ...coffeeData,
         tags: {
-          include: {
-            tag: true,
-          },
+          create: tags.map(tagName => ({
+            tag: {
+              connectOrCreate: {
+                where: { name: tagName },
+                create: { name: tagName },
+              },
+            },
+          })),
         },
       },
+      include: {
+        tags: { include: { tag: true } },
+      },
     });
+    return {
+      ...coffee,
+      tags: coffee.tags.map(ct => ct.tag),
+    };
+  }
+
+  async update(id: string, data: UpdateCoffeeDto) {
+    const { tags, ...coffeeData } = data;
+
+    await this.findOne(id);
+
+    if (tags) {
+
+      await this.prisma.coffeeTag.deleteMany({ where: { coffeeId: id } });
+    }
+
+    const coffee = await this.prisma.coffee.update({
+      where: { id },
+      data: {
+        ...coffeeData,
+        ...(tags && {
+          tags: {
+            create: tags.map(tagName => ({
+              tag: {
+                connectOrCreate: {
+                  where: { name: tagName },
+                  create: { name: tagName },
+                },
+              },
+            })),
+          },
+        }),
+      },
+      include: {
+        tags: { include: { tag: true } },
+      },
+    });
+    return {
+      ...coffee,
+      tags: coffee.tags.map(ct => ct.tag),
+    };
   }
 
   async remove(id: string) {
-    //  1 - Verificar se o café existe
-
-    // 2 - Remover o café
+    await this.findOne(id);
+    return this.prisma.coffee.delete({ where: { id } });
   }
 
   async searchCoffees(params: {
@@ -84,26 +114,45 @@ export class CoffeesService {
     offset?: number;
   }) {
     const { start_date, end_date, name, tags, limit = 10, offset = 0 } = params;
+    const where: any = {};
 
-    // Construir o filtro
+    if (start_date || end_date) {
+      where.createdAt = {};
+      if (start_date) where.createdAt.gte = start_date;
+      if (end_date) where.createdAt.lte = end_date;
+    }
+    if (name) {
+      where.name = { contains: name, mode: 'insensitive' };
+    }
+    if (tags && tags.length > 0) {
+      where.tags = {
+        some: {
+          tag: { name: { in: tags } },
+        },
+      };
+    }
 
-    // Filtro por data
+    const [coffees, total] = await Promise.all([
+      this.prisma.coffee.findMany({
+        where,
+        include: { tags: { include: { tag: true } } },
+        skip: offset,
+        take: limit,
+      }),
+      this.prisma.coffee.count({ where }),
+    ]);
 
-    // Filtro por nome
-
-    // Filtro por tags
-
-    // Buscar os cafés com paginação
-
-    // Formatar a resposta
     return {
-      data: [],
+      data: coffees.map(coffee => ({
+        ...coffee,
+        tags: coffee.tags.map(ct => ct.tag),
+      })),
       pagination: {
-        total: [],
+        total,
         limit,
         offset,
-        hasMore: offset,
+        hasMore: offset + limit < total,
       },
     };
   }
-} 
+}

@@ -1,7 +1,7 @@
 export class OrderItemDto {
   name: string;
   quantity: number;
-  unitPrice: number;
+  unit_price: number;
   subtotal: number;
 }
 
